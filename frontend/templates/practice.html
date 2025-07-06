@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gurukul AI - Practice</title>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700&family=Montserrat:wght@600;700&display=swap" rel="stylesheet">
+    <!-- Lucide Icons -->
+    <script src="https://cdn.jsdelivr.net/npm/lucide@latest/dist/umd/lucide.min.js"></script>
+
+    <!-- Link your custom CSS file -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/practice.css') }}">
+</head>
+<body>
+    <header>
+        <div class="header-container">
+            <div class="header-left">
+                <div class="logo-container">
+                    <a href="https://lingo.iitgn.ac.in/gurukulai/home"><img src="{{ url_for('static', filename='images/logo.png') }}" alt="Gurukul AI Logo" class="logo"></a>
+                    <i data-lucide="brain" class="brain-icon"></i>
+                </div>
+                <h1>Gurukul AI Practice</h1>
+            </div>
+            <div class="header-right">
+                <a href="/home" class="nav-link"><i data-lucide="home"></i> Home</a>
+
+                {% if user %}
+                <div class="user-menu" style="position: relative; display: flex; align-items: center; gap: 0.5rem;">
+                    <img src="{{ user.picture }}" alt="avatar" style="width: 36px; height: 36px; border-radius: 50%; object-fit: cover; box-shadow: 0 1px 4px rgba(0,0,0,0.15);" />
+                    <button class="user-button" onclick="toggleDropdown()" style="background: none; border: none; font-weight: bold; color: var(--primary); cursor: pointer;">
+                        {{ user.name.split()[0] if user.name else user.email.split('@')[0] }}
+                    </button>
+                    <div id="dropdown" class="dropdown-menu" style="display: none; position: absolute; right: 0; background: white; box-shadow: 0 4px 8px rgba(0,0,0,0.1); border-radius: 0.5rem; overflow: hidden; z-index: 1000;">
+                        <a href="#" class="logout-btn" style="display: block; padding: 0.75rem 1rem; color: red; text-decoration: none;">Logout</a>
+                    </div>
+                </div>
+
+                <script>
+                function toggleDropdown() {
+                    const dropdown = document.getElementById('dropdown');
+                    dropdown.style.display = dropdown.style.display === 'block' ? 'none' : 'block';
+                }
+                document.addEventListener('click', function(event) {
+                    const dropdown = document.getElementById('dropdown');
+                    if (!event.target.closest('.user-menu')) {
+                        dropdown.style.display = 'none';
+                    }
+                });
+                </script>
+                {% endif %}
+            </div>
+        </div>
+    </header>
+    
+    <main>
+        <div class="practice-container">
+            <!-- Progress Steps -->
+            <div class="progress-container">
+                <div class="progress-bar">
+                    <div class="progress" id="progressBar"></div>
+                </div>
+                <div class="steps-container">
+                    <div class="step active" data-step="1">
+                        <div class="step-icon">
+                            <i data-lucide="book-open"></i>
+                        </div>
+                        <span>Class</span>
+                    </div>
+                    <div class="step" data-step="2">
+                        <div class="step-icon">
+                            <i data-lucide="bookmark"></i>
+                        </div>
+                        <span>Subject</span>
+                    </div>
+                    <div class="step" data-step="3">
+                        <div class="step-icon">
+                            <i data-lucide="file-text"></i>
+                        </div>
+                        <span>Chapter</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Selection Interface -->
+            <div class="selection-container">
+                <div class="selector-card active" data-step="1">
+                    <h2>Select Your Class</h2>
+                    <p class="selection-subtitle">Choose the class you want to practice</p>
+                    
+                    <div class="class-grid">
+                        {% for class in classes %}
+                        <div class="class-card" data-class-id="{{ class.id }}">
+                            <div class="class-icon">
+                                <i data-lucide="graduation-cap"></i>
+                            </div>
+                            <h3>{{ class.name }}</h3>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <div class="selector-card" data-step="2">
+                    <div class="breadcrumb">
+                        <span class="breadcrumb-item clickable" onclick="goBackToStep(1)">Classes</span>
+                        <i data-lucide="chevron-right" class="breadcrumb-separator"></i>
+                        <span class="breadcrumb-item current">Subjects</span>
+                    </div>
+                    
+                    <h2>Select Subject</h2>
+                    <p class="selection-subtitle">Choose the subject you want to practice</p>
+                    
+                    <div class="subject-grid" id="subjectContainer">
+                        <div class="loading">
+                            <div class="general-loading-spinner"></div>
+                            <p>Loading subjects...</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="selector-card" data-step="3">
+                    <div class="breadcrumb">
+                        <span class="breadcrumb-item clickable" onclick="goBackToStep(1)">Classes</span>
+                        <i data-lucide="chevron-right" class="breadcrumb-separator"></i>
+                        <span class="breadcrumb-item clickable" onclick="goBackToStep(2)">Subjects</span>
+                        <i data-lucide="chevron-right" class="breadcrumb-separator"></i>
+                        <span class="breadcrumb-item current">Chapters</span>
+                    </div>
+                    
+                    <h2>Select Chapter</h2>
+                    <p class="selection-subtitle">Choose the chapter you want to practice</p>
+                    
+                    <div class="chapter-container" id="chapterContainer">
+                        <div class="loading">
+                            <div class="general-loading-spinner"></div>
+                            <p>Loading chapters...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Questions Container -->
+            <div class="questions-container" id="questionsContainer"></div>
+        </div>
+    </main>
+    
+    <footer>
+        <!-- <p>© 2025 Gurukul AI - Your Learning Partner</p> -->
+    </footer>
+    
+    {% if user %}
+    <script>
+    const USER_NAME = "{{ user.name.split()[0]|lower if user.name else user.email.split('@')[0]|lower }}";
+    </script>
+
+    <!-- Only load JS if user is logged in -->
+    <script src="{{ url_for('static', filename='js/practice.js') }}"></script>
+    {% else %}
+    <script>
+    // Create a smooth login message page
+    document.body.innerHTML = `
+        <div class="login-required-container">
+            <h1>🔒 Please login to continue</h1>
+            <p>You need to login to access Gurukul AI Practice.</p>
+            <a href="https://lingo.iitgn.ac.in/gurukulai/">🔗 Go to Home/Login</a>
+        </div>
+    `;
+    </script>
+    {% endif %}
+    
+    <script>
+        lucide.createIcons();
+        
+        function goBackToStep(step) {
+            advanceStep(step);
+        }
+    </script>
+    <script>
+        const SUBJECTS_URL = "{{ url_for('get_subjects', class_id=0) }}".replace('/0', '/');
+        
+        const CHAPTERS_URL = "{{ url_for('get_chapters', subject_id=0) }}".replace('/0', '/');
+        const QUESTIONS_URL = window.location.protocol === 'https:' 
+            ? 'https://lingo.iitgn.ac.in/gurukulai/practice/get_questions/'
+            : 'http://10.0.62.205:3223/practice/get_questions/';
+    </script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const logoutButtons = document.querySelectorAll('.logout-btn');
+            logoutButtons.forEach(btn => {
+                btn.addEventListener('click', async (e) => {
+                    e.preventDefault();
+                    try {
+                        const res = await fetch('/gurukulai/logout', {
+                            method: "GET",
+                            credentials: "include"
+                        });
+                        window.location.href = "https://lingo.iitgn.ac.in/gurukulai/";
+                    } catch (err) {
+                        console.error("Logout failed", err);
+                        alert("Logout failed. Try again.");
+                    }
+                });
+            });
+        });
+    </script>    
+    <!-- Modal for Practice Type Selection -->
+    <div id="practiceTypeModal" class="modal-overlay" style="display: none;" role="dialog" aria-labelledby="modalTitle" aria-modal="true">
+        <div class="modal-content">
+            <button class="modal-close-btn-top" onclick="closePracticeModal()" aria-label="Close modal">
+                <i data-lucide="x"></i>
+            </button>
+            <h2 id="modalTitle" class="modal-title">Select Practice Mode</h2>
+            <div class="practice-mode-grid">
+                <div class="practice-mode-card" id="mcqMode" role="button" tabindex="0" aria-label="Practice with Multiple Choice Questions">
+                    <i data-lucide="list-check" class="mode-icon"></i>
+                    <h3 class="mode-title">MCQs</h3>
+                    <p class="mode-description">Practice multiple choice questions based on this chapter.</p>
+                </div>
+                <div class="practice-mode-card" id="theoryMode" role="button" tabindex="0" aria-label="Practice with Theoretical Questions">
+                    <i data-lucide="pen-square" class="mode-icon"></i>
+                    <h3 class="mode-title">Theoretical</h3>
+                    <p class="mode-description">Answer long-form questions and get feedback from AI.</p>
+                </div>
+            </div>
+            <button class="modal-close-btn" onclick="closePracticeModal()">
+                <i data-lucide="x"></i> Cancel
+            </button>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gurukul AI - Chatbot</title>
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@300;400;600;700&family=Montserrat:wght@500;700&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/showdown/2.1.0/showdown.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@4/dist/tesseract.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/lucide@latest/dist/umd/lucide.min.js"></script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/home.css') }}">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-871J09MRTR"></script>
+    <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+
+    gtag('config', 'G-871J09MRTR');
+    </script>
+</head>
+
+<body>
+    <header>
+        
+        <div class="header-container">
+            <div class="header-left">
+                <div class="logo-container">
+                    <a href="https://lingo.iitgn.ac.in/gurukulai/"><img src="{{ url_for('static', filename='images/logo.png') }}" alt="Gurukul AI Logo" class="logo"></a>
+                    <i data-lucide="brain" class="brain-icon"></i>
+                </div>
+                <h1>Gurukul AI <i data-lucide="book" class="book-icon"></i></h1>
+            </div>
+            <div class="header-right">
+                <a href="{{ url_for('practice') }}" class="nav-btn">
+                    <i data-lucide="book-open" class="book-icon"></i>
+                    <span class="btn-text">Practice</span>
+                </a>
+                <a href="https://forms.gle/LJfvX9cgrgNGiTL59" target="_blank" class="nav-btn feedback-btn">
+                    <i data-lucide="message-square" class="feedback-icon"></i>
+                    <span class="btn-text">Feedback</span>
+                </a>
+
+                {% if user %}
+                <div class="user-menu" style="position: relative; display: flex; align-items: center; gap: 0.5rem;">
+                <img src="{{ user.picture }}" alt="avatar" style="width: 36px; height: 36px; border-radius: 50%; object-fit: cover; box-shadow: 0 1px 4px rgba(0,0,0,0.15);" />
+                <button class="user-button" onclick="toggleDropdown()" style="background: none; border: none; font-weight: bold; color: var(--primary); cursor: pointer;">
+                    {{ user.name.split()[0] if user.name else user.email.split('@')[0] }}
+                </button>
+                <div id="dropdown" class="dropdown-menu" style="display: none; position: absolute; right: 0; background: white; box-shadow: 0 4px 8px rgba(0,0,0,0.1); border-radius: 0.5rem; overflow: hidden; z-index: 1000;">
+                    <a href="#" class="logout-btn" style="display: block; padding: 0.75rem 1rem; color: red; text-decoration: none;">Logout</a>
+
+                </div>
+                </div>
+
+                <script>
+                function toggleDropdown() {
+                    const dropdown = document.getElementById('dropdown');
+                    dropdown.style.display = dropdown.style.display === 'block' ? 'none' : 'block';
+                }
+                document.addEventListener('click', function(event) {
+                    const dropdown = document.getElementById('dropdown');
+                    if (!event.target.closest('.user-menu')) {
+                    dropdown.style.display = 'none';
+                    }
+                });
+                </script>
+                {% endif %}
+
+
+            </div>
+        </div>
+    </header>
+
+    <main>
+        <div class="content-wrapper">
+            <div class="chat-container">
+                <div class="chat-content" id="chat-content">
+                    <!-- Messages will be dynamically added here -->
+                </div>
+
+                <div class="typing-indicator" id="typing-indicator" style="display: none;">
+                    <div class="typing-dot"></div>
+                    <div class="typing-dot"></div>
+                    <div class="typing-dot"></div>
+                </div>
+
+                <!-- Template Questions Section -->
+                <div class="template-questions" id="template-questions-section">
+                    <h3 class="template-title">Quick Questions</h3>
+                    <div class="template-buttons">
+                        <button class="template-btn" data-question="What is photosynthesis?">
+                            <i data-lucide="leaf" size="16"></i>
+                            What is photosynthesis?
+                        </button>
+                        <button class="template-btn" data-question="Convert 10 kg into pounds">
+                            <i data-lucide="scale" size="16"></i>
+                            Convert 10 kg into pounds
+                        </button>
+                        <button class="template-btn" data-question="What are Newton's laws?">
+                            <i data-lucide="orbit" size="16"></i>
+                            What are Newton's laws?
+                        </button>
+                    </div>
+                </div>
+
+                <div class="input-section">
+                    <div class="select-container">
+                        <div class="select-wrapper">
+                            <select id="class-select">
+                                <option value="class-9">Class 9</option>
+                                <option value="class-10">Class 10</option>
+                                <option value="class-11">Class 11</option>
+                                <option value="class-12">Class 12</option>
+                            </select>
+                            <i data-lucide="chevron-down" class="select-icon"></i>
+                        </div>
+                        <div class="select-wrapper">
+                            <select id="subject-select">
+                                <option value="science">Science</option>
+                                <option value="maths">Mathematics</option>
+                                <option value="english">English</option>
+                                <option value="hindi">Hindi</option>
+                                <option value="social-science">Social Science</option>
+                            </select>
+                            <i data-lucide="chevron-down" class="select-icon"></i>
+                        </div>
+                        <button id="new-conversation-btn" class="action-button">
+                            <i data-lucide="refresh-cw" size="16"></i>
+                            <span class="btn-text">New Conversation</span>
+                        </button>
+                    </div>
+                    <div class="input-container">
+                        <textarea id="query" placeholder="Ask me anything or upload an image..." required></textarea>
+                        
+                        <!-- Hidden file input -->
+                        <input type="file" id="file-input" accept="image/*" style="display:none;">
+                        
+                        <!-- Updated image upload button -->
+                        <button id="image-upload-btn" class="image-upload-button" title="Upload image for OCR">
+                            <i data-lucide="image" size="20"></i>
+                        </button>
+                        
+                        <!-- OCR progress and preview elements -->
+                        <div id="ocr-progress" class="ocr-progress">Processing image...</div>
+                        <img id="ocr-preview" class="ocr-preview" alt="Image preview">
+                        
+                        <!-- Send button remains the same -->
+                        <button type="submit" id="send" class="send-button">
+                            <i data-lucide="send"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script src="{{ url_for('static', filename='js/home.js') }}"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const logoutButtons = document.querySelectorAll('.logout-btn');
+            logoutButtons.forEach(btn => {
+                btn.addEventListener('click', async (e) => {
+                    e.preventDefault();
+                    try {
+                        const res = await fetch('/gurukulai/logout', {
+                            method: "GET",
+                            credentials: "include"
+                        });
+                        window.location.href = "https://lingo.iitgn.ac.in/gurukulai/";
+                    } catch (err) {
+                        console.error("Logout failed", err);
+                        alert("Logout failed. Try again.");
+                    }
+                });
+            });
+        });
+        </script>
+</body>
+
+</html>
